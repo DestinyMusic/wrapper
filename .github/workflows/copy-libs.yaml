@@ -1,0 +1,18 @@
+name: Force Copy Libs
+on: workflow_dispatch
+permissions:
+  contents: write
+jobs:
+  copy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Copy from arm64 and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout origin/arm64 -- rootfs/system/lib64/
+          git commit -m "Force copied arm64 libs" || echo "No changes"
+          git push
