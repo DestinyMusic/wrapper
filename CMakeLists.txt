@@ -3,13 +3,6 @@ cmake_minimum_required(VERSION 3.25)
 set(CMAKE_C_STANDARD 99)
 set(CMAKE_CXX_STANDARD 11)
 
-set(ANDROID_NDK_PATH "${CMAKE_CURRENT_SOURCE_DIR}/android-ndk-r23b" CACHE PATH "NDK Path")
-set(TOOLCHAIN "${ANDROID_NDK_PATH}/toolchains/llvm/prebuilt/linux-x86_64")
-
-set(CMAKE_C_COMPILER "${TOOLCHAIN}/bin/x86_64-linux-android22-clang")
-set(CMAKE_CXX_COMPILER "${TOOLCHAIN}/bin/x86_64-linux-android22-clang++")
-set(C_COMPILER "${TOOLCHAIN}/bin/clang")
-
 project(wrapper LANGUAGES C CXX)
 
 include(FetchContent)
@@ -64,14 +57,16 @@ find_library(STORESERVICESCORE_LIB storeservicescore PATHS ${SYSTEM_LIB_DIR})
 find_library(MEDIAPLATFORM_LIB mediaplatform PATHS ${SYSTEM_LIB_DIR})
 find_library(CXX_SHARED_LIB c++_shared PATHS ${SYSTEM_LIB_DIR})
 find_library(CURL_SHARED_LIB curl PATHS ${SYSTEM_LIB_DIR})
-find_library(LOG_SHARED_LIB log PATHS ${SYSTEM_LIB_DIR})
+
+# Properly find Android's built-in log library from the NDK toolchain
+find_library(LOG_LIB log)
 
 target_link_libraries(main PRIVATE
     ${CXX_SHARED_LIB}
     ${ANDROIDAPPMUSIC_LIB}
     ${STORESERVICESCORE_LIB}
     ${MEDIAPLATFORM_LIB}
-    ${LOG_SHARED_LIB}
+    ${LOG_LIB}
 )
 
 get_target_property(MAIN_COMPILE_DEFINITIONS main COMPILE_DEFINITIONS)
@@ -89,7 +84,7 @@ ExternalProject_Add(
     PREFIX ${CMAKE_BINARY_DIR}/wrapper_build
     SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}
     CONFIGURE_COMMAND ""
-    BUILD_COMMAND ${C_COMPILER} -O3 -Wall -o wrapper ${WRAPPER_SOURCE} ${CMAKE_CURRENT_SOURCE_DIR}/cmdline.c
+    BUILD_COMMAND ${CMAKE_C_COMPILER} -O3 -Wall -o wrapper ${WRAPPER_SOURCE} ${CMAKE_CURRENT_SOURCE_DIR}/cmdline.c
     BUILD_IN_SOURCE 1
     INSTALL_COMMAND ""
     DEPENDS main
@@ -100,7 +95,7 @@ ExternalProject_Add(
     PREFIX ${CMAKE_BINARY_DIR}/wrapper_build
     SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}
     CONFIGURE_COMMAND ""
-    BUILD_COMMAND ${C_COMPILER} -O3 -Wall -o wrapper ${WRAPPER_ROOTLESS_SOURCE} ${CMAKE_CURRENT_SOURCE_DIR}/cmdline.c
+    BUILD_COMMAND ${CMAKE_C_COMPILER} -O3 -Wall -o wrapper ${WRAPPER_ROOTLESS_SOURCE} ${CMAKE_CURRENT_SOURCE_DIR}/cmdline.c
     BUILD_IN_SOURCE 1
     INSTALL_COMMAND ""
     DEPENDS main
