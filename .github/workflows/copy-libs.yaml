@@ -1,7 +1,13 @@
 name: Force Copy Libs
-on: workflow_dispatch
+
+on: 
+  push:
+    branches: [ "aarch64-linux" ]
+  workflow_dispatch:
+
 permissions:
   contents: write
+
 jobs:
   copy:
     runs-on: ubuntu-latest
@@ -16,3 +22,4 @@ jobs:
           git checkout origin/arm64 -- rootfs/system/lib64/
           git commit -m "Force copied arm64 libs" || echo "No changes"
           git push
+          
