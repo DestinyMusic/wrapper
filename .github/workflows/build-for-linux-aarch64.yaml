@@ -1,4 +1,4 @@
-name: Build for Android arm64
+name: Build for Linux aarch64
 
 on:
   push:
@@ -22,7 +22,8 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt update
-          sudo apt install -y aria2 zip cmake build-essential
+          # Added the Linux ARM64 compiler below
+          sudo apt install -y aria2 zip cmake build-essential gcc-aarch64-linux-gnu
 
       - name: Set up Android NDK r23b
         run: |
@@ -33,12 +34,20 @@ jobs:
         run: |
           mkdir build
           cd build
-          # Use the official NDK toolchain configuration to force build for Android ARM64
+          
+          # 1. Build the Android components using the NDK
           cmake -DCMAKE_TOOLCHAIN_FILE=$GITHUB_WORKSPACE/android-ndk-r23b/build/cmake/android.toolchain.cmake \
                 -DANDROID_ABI=arm64-v8a \
                 -DANDROID_PLATFORM=android-22 \
                 ..
           make -j$(nproc)
+          
+          # 2. Go back to the main directory
+          cd ..
+          
+          # 3. OVERWRITE the broken Intel host wrappers with pure Linux ARM64 versions
+          aarch64-linux-gnu-gcc -O3 -Wall -o wrapper wrapper.c cmdline.c
+          aarch64-linux-gnu-gcc -O3 -Wall -o wrapper-rootless wrapper-rootless.c cmdline.c
 
       - name: Set outputs
         id: vars
@@ -46,25 +55,25 @@ jobs:
 
       - name: Create Release Zip File
         run: |
-          zip -r Wrapper.arm64.latest.zip rootfs/ wrapper wrapper-rootless compose.yaml entrypoint.sh Dockerfile
+          zip -r wrapper.aarch64.linux.zip rootfs/ wrapper wrapper-rootless compose.yaml entrypoint.sh Dockerfile
 
       - name: Update Tag
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git tag -f wrapper.arm64.latest
-          git push origin wrapper.arm64.latest --force
+          git tag -f wrapper.aarch64.linux.latest
+          git push origin wrapper.aarch64.linux.latest --force
 
       - name: Create or Update Release
         uses: softprops/action-gh-release@v2
         with:
-          files: Wrapper.arm64.latest.zip
+          files: wrapper.aarch64.linux.zip
           body: |
-            Latest Android arm64 build.
+            Latest build packaged for aarch64 linux container.
             Commit: ${{ github.sha }}
             Message: ${{ github.event.head_commit.message }}
-          name: Wrapper.arm64.latest
-          tag_name: wrapper.arm64.latest
+          name: Wrapper.aarch64.linux.latest
+          tag_name: wrapper.aarch64.linux.latest
           make_latest: true
           overwrite: true
           
