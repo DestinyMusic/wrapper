@@ -52,11 +52,11 @@ set_target_properties(main PROPERTIES
 )
 
 set(SYSTEM_LIB_DIR "${CMAKE_SOURCE_DIR}/rootfs/system/lib64")
-find_library(ANDROIDAPPMUSIC_LIB androidappmusic PATHS ${SYSTEM_LIB_DIR})
-find_library(STORESERVICESCORE_LIB storeservicescore PATHS ${SYSTEM_LIB_DIR})
-find_library(MEDIAPLATFORM_LIB mediaplatform PATHS ${SYSTEM_LIB_DIR})
-find_library(CXX_SHARED_LIB c++_shared PATHS ${SYSTEM_LIB_DIR})
-find_library(CURL_SHARED_LIB curl PATHS ${SYSTEM_LIB_DIR})
+find_library(ANDROIDAPPMUSIC_LIB androidappmusic PATHS ${SYSTEM_LIB_DIR} NO_CMAKE_FIND_ROOT_PATH)
+find_library(STORESERVICESCORE_LIB storeservicescore PATHS ${SYSTEM_LIB_DIR} NO_CMAKE_FIND_ROOT_PATH)
+find_library(MEDIAPLATFORM_LIB mediaplatform PATHS ${SYSTEM_LIB_DIR} NO_CMAKE_FIND_ROOT_PATH)
+find_library(CXX_SHARED_LIB c++_shared PATHS ${SYSTEM_LIB_DIR} NO_CMAKE_FIND_ROOT_PATH)
+find_library(CURL_SHARED_LIB curl PATHS ${SYSTEM_LIB_DIR} NO_CMAKE_FIND_ROOT_PATH)
 
 # Properly find Android's built-in log library from the NDK toolchain
 find_library(LOG_LIB log)
