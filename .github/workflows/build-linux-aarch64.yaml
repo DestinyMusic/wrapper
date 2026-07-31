@@ -1,0 +1,63 @@
+name: Build for Linux aarch64
+
+on:
+  push:
+    branches: [ "arm64", "main" ]
+  pull_request:
+    branches: [ "arm64", "main" ]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    # Use standard Ubuntu runner
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # Install standard Linux cross-compilation tools
+      - name: Install build dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y build-essential cmake zip gcc-aarch64-linux-gnu g++-aarch64-linux-gnu
+
+      - name: Build
+        run: |
+          mkdir build
+          cd build
+          # Tell CMake to use the standard Linux aarch64 cross-compiler
+          cmake -DCMAKE_C_COMPILER=aarch64-linux-gnu-gcc -DCMAKE_CXX_COMPILER=aarch64-linux-gnu-g++ ..
+          make -j$(nproc)
+
+      - name: Set outputs
+        id: vars
+        run: echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+
+      - name: Create Release Zip File
+        run: |
+          # Make sure 'rootfs/system/bin/main' (or whatever the executable is called) exists
+          zip -r Wrapper.linux-aarch64.latest.zip rootfs/ wrapper wrapper-rootless compose.yaml entrypoint.sh Dockerfile
+
+      - name: Update Tag
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -f wrapper.linux-aarch64.latest
+          git push origin wrapper.linux-aarch64.latest --force
+
+      - name: Create or Update Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: Wrapper.linux-aarch64.latest.zip
+          body: |
+            Latest Linux aarch64 build.
+            Commit: ${{ github.sha }}
+            Message: ${{ github.event.head_commit.message }}
+          name: Wrapper.linux-aarch64.latest
+          tag_name: wrapper.linux-aarch64.latest
+          make_latest: true
+          overwrite: true
