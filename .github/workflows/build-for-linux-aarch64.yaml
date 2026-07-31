@@ -2,9 +2,10 @@ name: Build for Linux aarch64
 
 on:
   push:
-    branches: [ "arm64", "main" ]
+    branches: [ "main", "aarch64-linux", "aarch64", "arm64" ]
   pull_request:
-    branches: [ "arm64", "main" ]
+    branches: [ "main", "aarch64-linux", "aarch64", "arm64" ]
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -61,3 +62,4 @@ jobs:
           tag_name: wrapper.linux-aarch64.latest
           make_latest: true
           overwrite: true
+          
